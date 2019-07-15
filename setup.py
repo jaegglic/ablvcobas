@@ -28,10 +28,8 @@ with open("README.md", "r") as file_handle:
 
 
 # Generic requirements
-tests_require = ['numpy', 'pyodbc']
-_rem_requires_for_rtd = ['pyodbc']
-install_requires = [p_req for p_req in tests_require
-                    if p_req not in _rem_requires_for_rtd]
+tests_require = ['sklearn']
+install_requires = tests_require
 
 
 _setup_data = {
