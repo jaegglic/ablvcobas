@@ -1,0 +1,9 @@
+__pycache__
+data
+
+src/_pers_data.py
+
+docs/_build
+docs/_static
+docs/_template
+
