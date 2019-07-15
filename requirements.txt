@@ -1,3 +1,4 @@
 
 # Generic packages
+pandas
 sklearn
