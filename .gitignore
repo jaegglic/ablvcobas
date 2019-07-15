@@ -1,10 +1,25 @@
+
+# PyCharm specific stuff
 __pycache__
+
+# User-specific stuff
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/vcs.xml
+.idea/jsLibraryMappings.xml
+
+# Data folder containing the raw data
 data
-venv
 
-src/_pers_data.py
-
+# Documentation
 docs/_build
 docs/_static
 docs/_template
+
+# Virtual environment
+venv
+
+# Personal data
+src/_pers_data.py
 
