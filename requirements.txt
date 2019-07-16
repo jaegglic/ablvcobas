@@ -1,4 +1,7 @@
 
 # Generic packages
 pandas
+xlrd >= 1.0.0        # For excel support in pandas
 sklearn
+matplotlib
+numpy
