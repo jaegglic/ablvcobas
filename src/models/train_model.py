@@ -36,9 +36,9 @@ reg_quad = LinearRegression().fit(X_quad, y)
 
 # Save trained models
 nm_mod_reg_lin = 'mod_reg_lin.mod'
+nm_mod_reg_quad = 'mod_reg_quad.mod'
 with open(PATH_MODELS + nm_mod_reg_lin, 'wb') as pfile:
     pickle.dump(reg_lin, pfile)
-nm_mod_reg_quad = 'mod_reg_quad.mod'
 with open(PATH_MODELS + nm_mod_reg_quad, 'wb') as pfile:
     pickle.dump(reg_quad, pfile)
 
