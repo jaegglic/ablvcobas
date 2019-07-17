@@ -7,6 +7,10 @@
 import os
 import platform
 
+# Third party requirements
+
+# Local imports
+
 # Define file separator
 os_name = platform.system()
 if os_name == 'Windows':
@@ -24,12 +28,12 @@ PATH_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))\
             + file_sep
 
 # Path to the data folders
-PATH_DATA           = PATH_ROOT + 'data'      + file_sep
-PATH_DATA_RAW       = PATH_DATA + 'raw'       + file_sep
-PATH_DATA_PROCESSED = PATH_DATA + 'processed' + file_sep
+PATH_DATA           = f'{PATH_ROOT}data{file_sep}'
+PATH_DATA_RAW       = f'{PATH_DATA}raw{file_sep}'
+PATH_DATA_PROCESSED = f'{PATH_DATA}processed{file_sep}'
 
 # Path to the model folder
-PATH_MODELS          = PATH_ROOT + 'models'     + file_sep
+PATH_MODELS         = f'{PATH_ROOT}models{file_sep}'
 
 if __name__ == '__main__':
     _indent = '  '
