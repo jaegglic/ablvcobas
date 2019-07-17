@@ -31,7 +31,8 @@ with open(PATH_MODELS + nm_mod_reg_quad, 'rb') as pfile:
     reg_quad = pickle.load(pfile)
 
 # Generate values for the predictions and save them
-X_pred = np.linspace(np.min(X_train), np.max(X_train), _N_PRED)
+# X_pred = np.linspace(np.min(X_train), np.max(X_train), _N_PRED)
+X_pred = X_train
 X_pred_lin = np.array([np.ones_like(X_pred), X_pred]).transpose()
 y_pred_lin = reg_lin.predict(X_pred_lin)
 
@@ -42,9 +43,9 @@ y_pred_quad = reg_quad.predict(X_pred_quad)
 nm_pred_reg_lin  = 'pred_reg_lin.pred'
 nm_pred_reg_quad = 'pred_reg_quad.pred'
 with open(PATH_MODELS + nm_pred_reg_lin, 'wb') as pfile:
-    pickle.dump((X_pred, y_pred_lin), pfile)
+    pickle.dump((X_pred_lin, y_pred_lin), pfile)
 with open(PATH_MODELS + nm_pred_reg_quad, 'wb') as pfile:
-    pickle.dump((X_pred, y_pred_quad), pfile)
+    pickle.dump((X_pred_quad, y_pred_quad), pfile)
 
 if __name__ == '__main__':
     # Plot linear regression

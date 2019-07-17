@@ -12,7 +12,7 @@ import pickle
 
 # Third party requirements
 import numpy as np
-from scipy.stats import variation
+from scipy.stats import variation, pearsonr, kendalltau
 
 # Local imports
 from src._paths import PATH_DATA_PROCESSED
@@ -59,3 +59,8 @@ if __name__ == '__main__':
     str_64 = f'{"64 ":>{spf}}|' + _str_for_stats(y, spf, prec)
     print(str_177)
     print(str_64)
+
+    print()
+    print(f"Pearson's r:  {pearsonr(X, y)}")
+    print(f"Kendal's tau: {kendalltau(X, y)}")
+

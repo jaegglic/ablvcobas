@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """ In this file we use the prediction schemes to compute statistics between
 the true values and the predicted ones. In particular we compute:
-    - Mean of error
-    - Std of error
     - Bias
+    - Std of error
+    - Measurement uncertainty (is this equal to the rmse?)
     - Root mean square error (equivalent to the measurement uncertainty)
 """
 
@@ -13,21 +13,14 @@ import pickle
 
 # Third party requirements
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import variation
 from sklearn.metrics import mean_squared_error
 
 # Local imports
-from src._paths import PATH_DATA_PROCESSED
+from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
-
-# Load data
-
-
-
-
-
-
-
+from src.models.predict_model import nm_pred_reg_lin, nm_pred_reg_quad
 
 
 def _str_for_pred_stats(y_test, y_pred, spf, prec):
@@ -45,9 +38,16 @@ def _str_for_pred_stats(y_test, y_pred, spf, prec):
         str: String representation for the statistics.
 
     """
+    k = 2
 
-    return f'{np.mean(y_test - y_pred):^{spf}.{prec}f}|' \
-           f'{np.std(y_test - y_pred):^{spf}.{prec}f}|'
+    bias = np.mean(y_pred - y_test)
+    cv = variation(y_pred)
+    mu = k * np.sqrt(cv**2 + bias**2)
+    rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+
+    return f'{bias:^{spf}.{prec}f}|' \
+           f'{rmse:^{spf}.{prec}f}|' \
+           f'{mu:^{spf}.{prec}f}|'
 
 
 if __name__ == '__main__':
@@ -55,14 +55,37 @@ if __name__ == '__main__':
     prec = 5       # precision
 
     head_line = ' '*spf + '|' + \
-                f'{"Mean":^{spf}}|' \
-                f'{"Std":^{spf}}|'
+                f'{"Bias":^{spf}}|' \
+                f'{"RMSE":^{spf}}|' \
+                f'{"MU":^{spf}}|'
+
+    # Load data
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+        X, y = pickle.load(mfile)
+    with open(PATH_MODELS + nm_pred_reg_lin, 'rb') as pfile:
+        X_pred_lin, y_pred_lin = pickle.load(pfile)
+    with open(PATH_MODELS + nm_pred_reg_quad, 'rb') as pfile:
+        X_pred_quad, y_pred_quad = pickle.load(pfile)
 
     print(head_line)
     print('-'*len(head_line))
 
-    str_177 = f'{"177 ":>{spf}}|' + _str_for_stats(X, spf, prec)
-    str_64 = f'{"64 ":>{spf}}|' + _str_for_stats(y, spf, prec)
+    str_177 = f'{"reg_lin ":>{spf}}|' +\
+              _str_for_pred_stats(y, y_pred_lin, spf, prec)
+    str_64 = f'{"reg_quad ":>{spf}}|' +\
+              _str_for_pred_stats(y, y_pred_quad, spf, prec)
     print(str_177)
     print(str_64)
+
+    _, ax = plt.subplots(1, 2, figsize=(8, 6))
+    ax[0].scatter(X, y, s=1)
+    ax[0].plot(X, y_pred_lin)
+    ax[1].plot(X, y_pred_lin - y, '.k')
+
+    _, ax = plt.subplots(1, 2, figsize=(8, 6))
+    ax[0].scatter(X, y, s=1)
+    ax[0].plot(X, y_pred_quad)
+    ax[1].plot(X, y_pred_quad - y, '.k')
+
+    plt.show()
 
