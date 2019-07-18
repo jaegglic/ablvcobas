@@ -12,7 +12,7 @@ import pickle
 
 # Third party requirements
 import numpy as np
-from scipy.stats import variation, pearsonr, kendalltau
+from scipy.stats import variation, pearsonr, kendalltau, spearmanr, norm
 
 # Local imports
 from src._paths import PATH_DATA_PROCESSED
@@ -21,6 +21,40 @@ from src.features.build_features import nm_data_file_modeling
 # Load data
 with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
     X, y = pickle.load(mfile)
+
+
+def pearsonr_ci(x, y, alpha=0.05):
+    """ This function is taken from
+            https://zhiyzuo.github.io/Pearson-Correlation-CI-in-Python/
+    it calculates the Pearson correlation along with the confidence interval.
+
+    Args:
+        x (iterable): Input for correlation calculation
+        y (iterable): Input for correlation calculation
+        alpha (float, optional): Significance level
+
+    Returns:
+        rho (float):  Pearson's correlation coefficient
+        pval (float): Probability for non-correlation
+        lo (float): Lower bound of confidence interval
+        hi (float): Higher bound for confidence interval
+    """
+    # Compotute person's r and pval
+    rho, pval = pearsonr(x, y)
+
+    # Transform correlation into a Fishers' Z-score (with corresponding std)
+    r_z = np.arctanh(rho)
+    fishers_std = 1 / np.sqrt(x.size-3)
+
+    # CI under transformation is r_z \pm z_alpha*fishers_std, where z_alpha can
+    # be computed from the normal distribution as
+    z_alpha = norm.ppf(1 - alpha/2)
+    lo_z, hi_z = r_z-z_alpha*fishers_std, r_z+z_alpha*fishers_std
+
+    # Transform the values back using the inverse map
+    lo, hi = np.tanh((lo_z, hi_z))
+
+    return rho, pval, lo, hi
 
 
 def _str_for_stats(vals, spf, prec):
@@ -60,7 +94,28 @@ if __name__ == '__main__':
     print(str_177)
     print(str_64)
 
-    print()
-    print(f"Pearson's r:  {pearsonr(X, y)}")
-    print(f"Kendal's tau: {kendalltau(X, y)}")
+    # Compute correlation statistics
+    print('\n Correlation statistics')
+    pear_rho, pear_p, pear_lo, pear_hi = pearsonr_ci(X, y)
+    print(f"Pearson's r:        {pear_rho:{spf}.{prec}f} "
+          f"(p-value = {pear_p:.{prec}f})")
+    kend_t, kend_p = kendalltau(X, y)
+    print(f"Kendal's tau:       {kend_t:{spf}.{prec}f} "
+          f"(p-value = {kend_p:.{prec}f})")
+
+    # Compute rank correlation
+    print('\n Rank correlation statistics')
+    X_order = X.argsort()
+    X_rank = X_order.argsort()
+    y_order = y.argsort()
+    y_rank = y_order.argsort()
+    pear_rank_rho, pear_rank_p = pearsonr(X_rank, y_rank)
+    print(f"Pearson's rank r:   {pear_rank_rho:{spf}.{prec}f} "
+          f"(p-value = {pear_rank_p:.{prec}f})")
+    spear_rho, spear_p = spearmanr(X, y)
+    print(f"Spearman's r        {spear_rho:{spf}.{prec}f} "
+          f"(p-value = {spear_p:.{prec}f})")
+    kend_rank_rho, kend_rank_p = kendalltau(X_rank, y_rank)
+    print(f"Kendall's rank tau: {kend_rank_rho:{spf}.{prec}f} "
+          f"(p-value = {kend_rank_p:.{prec}f})")
 
