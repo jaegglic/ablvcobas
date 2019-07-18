@@ -95,27 +95,20 @@ if __name__ == '__main__':
     print(str_64)
 
     # Compute correlation statistics
-    print('\n Correlation statistics')
+    print('\nCorrelation statistics')
     pear_rho, pear_p, pear_lo, pear_hi = pearsonr_ci(X, y)
-    print(f"Pearson's r:        {pear_rho:{spf}.{prec}f} "
-          f"(p-value = {pear_p:.{prec}f})")
-    kend_t, kend_p = kendalltau(X, y)
-    print(f"Kendal's tau:       {kend_t:{spf}.{prec}f} "
-          f"(p-value = {kend_p:.{prec}f})")
+    print(f"  Pearson's:        "
+          f"rho = {pear_rho:.{prec}f} "
+          f"pval = {pear_p:.{prec}f} "
+          f"CI = [{pear_lo:.{prec}f}, {pear_hi:.{prec}f}]")
 
-    # Compute rank correlation
-    print('\n Rank correlation statistics')
-    X_order = X.argsort()
-    X_rank = X_order.argsort()
-    y_order = y.argsort()
-    y_rank = y_order.argsort()
-    pear_rank_rho, pear_rank_p = pearsonr(X_rank, y_rank)
-    print(f"Pearson's rank r:   {pear_rank_rho:{spf}.{prec}f} "
-          f"(p-value = {pear_rank_p:.{prec}f})")
+    print('\nRank correlation statistics')
+    kend_t, kend_p = kendalltau(X, y)
+    print(f"  Kendal's:         "
+          f"tau = {kend_t:.{prec}f} "
+          f"pval = {kend_p:.{prec}f}")
     spear_rho, spear_p = spearmanr(X, y)
-    print(f"Spearman's r        {spear_rho:{spf}.{prec}f} "
-          f"(p-value = {spear_p:.{prec}f})")
-    kend_rank_rho, kend_rank_p = kendalltau(X_rank, y_rank)
-    print(f"Kendall's rank tau: {kend_rank_rho:{spf}.{prec}f} "
-          f"(p-value = {kend_rank_p:.{prec}f})")
+    print(f"  Spearman's rank:  "
+          f"rho = {spear_rho:.{prec}f} "
+          f"pval = {spear_p:.{prec}f}")
 
