@@ -5,6 +5,7 @@
     - :meth: `lin_reg`:         Calculates a standard linear regression
     - :meth: `pearsonr_ci`:     Calculates Pearson's r and confidence interval
     - :meth: `passing_bablok`:  Calculates Passing-Bablok regression
+    - :meth: `deming_reg`:      Calculates Deming regression
 
 """
 
@@ -187,3 +188,92 @@ def passing_bablok(x, y, alpha=0.05):
     ci_b_0 = (np.median(y - ci_b_1[0]*x), np.median(y - ci_b_1[1]*x))
 
     return b_0, b_1, ci_b_0, ci_b_1
+
+
+def deming_reg(x, y, std_ratio, alpha=0.05):
+    """ Computes the Deming regression as proposed in
+            https://en.wikipedia.org/wiki/Deming_regression.
+    
+    Args:
+        x (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
+            it will be flattened to 1-D.
+        y (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
+            it will be flattened to 1-D.
+        std_ratio (float): Ratio of the standard deviation in x and y.
+        alpha (float, optional): Significance level
+
+    Returns:
+        b_0 (float): Intercept of the linear regression line
+        b_1 (float): Slope of the linear regression line
+        x_star (ndarray, shape=(n,)): Array for the x_star values
+        y_star (ndarray, shape=(n,)): Array for the y_star values
+
+    """
+
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+
+    n = len(x)
+    if n != len(y):
+        raise ValueError('x and y must have the same length.')
+    elif n <= 1:
+        raise ValueError('x and y must have size > 2.')
+
+    # Solution
+    delta = std_ratio ** 2
+    b_0, b_1 = _deming_reg(x, y, n, delta)
+
+    # Compute star values
+    x_star = x + (b_1/(b_1**2 + delta)) * (y - b_0 - b_1*x)
+    y_star = b_0 + b_1*x_star
+
+    # Compute confidence interval
+    std_b_0, std_b_1 = _jackknife_deming_reg(x, y, n, delta)
+    z_val = norm.ppf(1 - alpha / 2)
+    d_b_0 = z_val * std_b_0
+    d_b_1 = z_val * std_b_1
+    ci_b_0 = (b_0 - d_b_0, b_0 + d_b_0)
+    ci_b_1 = (b_1 - d_b_1, b_1 + d_b_1)
+
+    return b_0, b_1, ci_b_0, ci_b_1, x_star, y_star
+
+
+def _deming_reg(x, y, n, delta):
+    """ The very central computation of Deming regression. This is outsourced
+    for the jackknife method to be able to call it."""
+    x_mean, y_mean = np.mean(x), np.mean(y)
+    x_diff, y_diff = (x - x_mean), (y - y_mean)
+
+    s_xx = sum(x_diff ** 2) / (n - 1)
+    s_xy = sum(x_diff * y_diff) / (n - 1)
+    s_yy = sum(y_diff ** 2) / (n - 1)
+
+    s_yy_ds_xx = s_yy - delta * s_xx
+    b_1 = (s_yy_ds_xx + np.sqrt(s_yy_ds_xx ** 2 + 4 * delta * (s_xy ** 2))) / (
+                2 * s_xy)
+    b_0 = y_mean - b_1 * x_mean
+    return b_0, b_1
+
+
+def _jackknife_deming_reg(x, y, n, delta):
+    """ Jackknife method for estimating the standard deviation."""
+
+    b_0, b_1 = _deming_reg(x, y, n, delta)
+
+    b_0_lst, b_1_lst = [], []
+    for i in range(n):
+        idx = np.concatenate((np.arange(0, i), np.arange(i+1, n)))
+        b_0_i, b_1_i = _deming_reg(x[idx], y[idx], n-1, delta)
+        b_0_lst.append(b_0_i)
+        b_1_lst.append(b_1_i)
+    b_0_lst, b_1_lst = np.array(b_0_lst), np.array(b_1_lst)
+
+    b_0_pseudo = n*b_0 - (n-1)*b_0_lst
+    b_1_pseudo = n*b_1 - (n-1)*b_1_lst
+    b_0_jk = np.mean(b_0_pseudo)
+    b_1_jk = np.mean(b_1_pseudo)
+
+    std_b_0 = np.sqrt(np.sum((b_0_pseudo-b_0_jk)**2)/(n*(n-1)))
+    std_b_1 = np.sqrt(np.sum((b_1_pseudo-b_1_jk)**2)/(n*(n-1)))
+
+    return std_b_0, std_b_1
