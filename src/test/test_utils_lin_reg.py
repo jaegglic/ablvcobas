@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 import src.utils as utl
 
 
-
 # Unit test class
 class TestCopyOnWrite(unittest.TestCase):
 
@@ -60,7 +59,6 @@ class TestCopyOnWrite(unittest.TestCase):
         ic_sklearn = reg_lin_sklearn.intercept_
         sl_sklearn = reg_lin_sklearn.coef_[1]
         ic_test, sl_test, _, _ = utl.lin_reg(self.x, self.y)
-
 
         self.assertTrue(abs(ic_sklearn - self.b_0) < self.tol)
         self.assertTrue(abs(sl_sklearn - self.b_1) < self.tol)
