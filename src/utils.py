@@ -2,18 +2,71 @@
 # -*- coding: utf-8 -*-
 """ This module contains utilities for the analysis of the data as:
 
+    - :meth: `lin_reg`:         Calculates a standard linear regression
     - :meth: `pearsonr_ci`:     Calculates Pearson's r and confidence interval
+    - :meth: `passing_bablok`:  Calculates Passing-Bablok regression
 
 """
 
 # Standard library
+from math import isclose
 
 # Third party requirements
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.stats import pearsonr, norm
 
 # Local imports
+
+
+def lin_reg(x, y, alpha=0.05):
+    """ This function computes a standard linear regression as proposed in [1].
+    In addition it also returns the confidence interval for the two parameters.
+
+    Args:
+        x (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
+            it will be flattened to 1-D.
+        y (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
+            it will be flattened to 1-D.
+        alpha (float, optional): Significance level
+
+    Returns:
+        b_0 (float): Intercept of the linear regression line
+        b_1 (float): Slope of the linear regression line
+        ci_b_0 (tuple): Confidence interval for b_0
+        ci_b_1 (tuple): Confidence interval for b_1
+
+    """
+
+    x = np.asarray(x).ravel()
+    y = np.asarray(y).ravel()
+
+    n = len(x)
+    if n != len(y):
+        raise ValueError('x and y must have the same length.')
+    elif n <= 2:
+        raise ValueError('x and y must have size > 2.')
+
+    # Estimate linear regression coefficients
+    x_mean, y_mean = np.mean(x), np.mean(y)
+    x_diff, y_diff = (x - x_mean), (y - y_mean)
+    b_1 = sum(x_diff*y_diff) / sum(x_diff**2)
+    b_0 = y_mean - b_1*x_mean
+
+    # Estimate uncertainties
+    RSS = sum((y - b_0 - b_1*x)**2)
+    var_y = RSS / (n-2)
+    denom = (n*sum(x**2) - sum(x)**2)
+    var_b_0 = var_y * sum(x**2) / denom
+    var_b_1 = n*var_y / denom
+
+    # Compute confidence intervals
+    z_val = norm.ppf(1 - alpha/2)
+    d_b_0 = z_val*np.sqrt(var_b_0)
+    d_b_1 = z_val*np.sqrt(var_b_1)
+    ci_b_0 = (b_0 - d_b_0, b_0 + d_b_0)
+    ci_b_1 = (b_1 - d_b_1, b_1 + d_b_1)
+
+    return b_0, b_1, ci_b_0, ci_b_1
 
 
 def pearsonr_ci(x, y, alpha=0.05):
@@ -55,7 +108,7 @@ def pearsonr_ci(x, y, alpha=0.05):
 
 
 def passing_bablok(x, y, alpha=0.05):
-    """ Passing-Bablok regression as described in [1].
+    """ Passing-Bablok regression as described in [1]. If
 
     Args:
         x (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
@@ -76,7 +129,6 @@ def passing_bablok(x, y, alpha=0.05):
                analytical methods". J. Clin Chem. Clin. Biochem., 21:709-720,
                1983.
     """
-    EPSILON = 1e-8
 
     x = np.asarray(x).ravel()
     y = np.asarray(y).ravel()
@@ -98,24 +150,25 @@ def passing_bablok(x, y, alpha=0.05):
             x_i, y_i = x[i], y[i]
             x_j, y_j = x[j], y[j]
 
-            if abs(x_i - x_j) < EPSILON:
+            if isclose(x_i, x_j):
                 # Distinguish the following cases
                 #   - y_j == y_i: omit these pairs (we have 0/0)
                 #   - y_j > y_i: put a very large number (we have oo/0)
                 #   - y_j < y_i: put a very small number (we have -oo/0)
-                if (y_j - y_i) >= EPSILON:
+                if y_j > y_i:
                     S_ij.append(np.inf)
-                elif (y_j - y_i) <= -EPSILON:
+                elif y_j < y_i:
                     S_ij.append(-np.inf)
 
             else:
                 # Distinguish the following cases
+                #   - S_ij > -1: add it to the list
                 #   - S_ij = -1: omit these pairs
                 #   - S_ij < -1: use it and add one to the counter
                 S_ij_cand = (y_j-y_i) / (x_j-x_i)
-                if S_ij_cand + 1 > EPSILON:
+                if S_ij_cand > -1:
                     S_ij.append(S_ij_cand)
-                elif S_ij_cand + 1 < -EPSILON:
+                elif S_ij_cand < -1:
                     S_ij.append(S_ij_cand)
                     counter += 1
 
@@ -134,10 +187,3 @@ def passing_bablok(x, y, alpha=0.05):
     ci_b_0 = (np.median(y - ci_b_1[0]*x), np.median(y - ci_b_1[1]*x))
 
     return b_0, b_1, ci_b_0, ci_b_1
-
-
-
-
-
-
-
