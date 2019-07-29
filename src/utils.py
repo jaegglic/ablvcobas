@@ -256,8 +256,9 @@ def _deming_reg(x, y, n, delta):
 
 
 def _jackknife_deming_reg(x, y, n, delta):
-    """ Jackknife method for estimating the standard deviation."""
-
+    """ Jackknife method for estimating the standard deviation from Deming's
+    regression.
+    """
     b_0, b_1 = _deming_reg(x, y, n, delta)
 
     b_0_lst, b_1_lst = [], []
