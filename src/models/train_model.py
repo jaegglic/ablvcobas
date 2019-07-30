@@ -12,6 +12,7 @@ import pickle
 
 # Third party requirements
 from scipy import stats
+import numpy as np
 from sklearn.metrics import r2_score
 
 # Local imports
@@ -20,7 +21,8 @@ from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
 
 # Standard error ratio for deming regression
-STD_RATIO = 1
+# STD_RATIO = 1.006526380968051       # Fix point
+STD_RATIO = 1.096985                # Radio of CV -> vis_basic_stats.py
 
 # Load data
 with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
@@ -79,3 +81,7 @@ if __name__ == '__main__':
     print('  Score  ', r2_score(y_star, y))
     print(f'  b_0 = {b_0_dem} CI = {ci_b_0_dem}')
     print(f'  b_1 = {b_1_dem} CI = {ci_b_1_dem}')
+    err_x = X - (y - b_0_dem) / b_1_dem
+    err_y = y - (b_0_dem + b_1_dem*X)
+    std_ratio_trained = np.std(err_x) / np.std(err_y)
+    print(f'  std ratio = {std_ratio_trained}')

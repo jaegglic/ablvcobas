@@ -24,6 +24,9 @@ from src.models.predict_model import nm_pred_reg_lin, nm_pred_reg_scipy, \
 from src.models.train_model import nm_mod_reg_lin, nm_mod_reg_pb, \
     nm_mod_reg_dem
 
+# Constants
+STD_FACT = 1.96
+
 
 def _str_for_pred_stats(y_test, y_pred, spf, prec):
     """ Computes the predictive statistics for the given value arrays. It
@@ -40,11 +43,10 @@ def _str_for_pred_stats(y_test, y_pred, spf, prec):
         str: String representation for the statistics.
 
     """
-    z = 1.96
 
     bias = np.mean(y_pred - y_test)
     cv = variation(y_pred)
-    mu = z * np.sqrt(cv**2 + bias**2)
+    mu = STD_FACT * np.sqrt(cv**2 + bias**2)
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     r2 = r2_score(y_test, y_pred)
 
@@ -99,9 +101,6 @@ if __name__ == '__main__':
     print(str_pb)
     print(str_dem)
 
-
-    std_fact = 1.96
-
     # Linear Regression (my own)
     print('\nLinear Regression')
     print(f'Intercept = {b_0_lin} CI = {ci_b_0_lin}')
@@ -116,8 +115,8 @@ if __name__ == '__main__':
     mn, std = np.mean(diff), np.std(diff)
     ax[1].plot((X+y)/2, y_pred_lin - y, '.k')
     ax[1].axhline(mn, color='red', linestyle='--')
-    ax[1].axhline(mn - std_fact*std, color='red', linestyle='--')
-    ax[1].axhline(mn + std_fact*std, color='red', linestyle='--')
+    ax[1].axhline(mn - STD_FACT * std, color='red', linestyle='--')
+    ax[1].axhline(mn + STD_FACT * std, color='red', linestyle='--')
 
     # Linear regression (scipy)
     fig, ax = plt.subplots(1, 2, figsize=(8, 6))
@@ -129,8 +128,8 @@ if __name__ == '__main__':
     mn, std = np.mean(diff), np.std(diff)
     ax[1].plot((X+y)/2, y_pred_scipy - y, '.k')
     ax[1].axhline(mn, color='red', linestyle='--')
-    ax[1].axhline(mn - std_fact*std, color='red', linestyle='--')
-    ax[1].axhline(mn + std_fact*std, color='red', linestyle='--')
+    ax[1].axhline(mn - STD_FACT * std, color='red', linestyle='--')
+    ax[1].axhline(mn + STD_FACT * std, color='red', linestyle='--')
 
     # Passing-Bablok Regression
     print('\nPassing-Bablok')
@@ -146,8 +145,8 @@ if __name__ == '__main__':
     mn, std = np.mean(diff), np.std(diff)
     ax[1].plot((X+y)/2, diff, '.k')
     ax[1].axhline(mn, color='red', linestyle='--')
-    ax[1].axhline(mn - std_fact*std, color='red', linestyle='--')
-    ax[1].axhline(mn + std_fact*std, color='red', linestyle='--')
+    ax[1].axhline(mn - STD_FACT * std, color='red', linestyle='--')
+    ax[1].axhline(mn + STD_FACT * std, color='red', linestyle='--')
 
     # Deming Regression
     print('\nDeming Regression')
@@ -169,7 +168,7 @@ if __name__ == '__main__':
     mn, std = np.mean(diff), np.std(diff)
     ax[1].plot((X + y) / 2, diff, '.k')
     ax[1].axhline(mn, color='red', linestyle='--')
-    ax[1].axhline(mn - std_fact * std, color='red', linestyle='--')
-    ax[1].axhline(mn + std_fact * std, color='red', linestyle='--')
+    ax[1].axhline(mn - STD_FACT * std, color='red', linestyle='--')
+    ax[1].axhline(mn + STD_FACT * std, color='red', linestyle='--')
 
     plt.show()
