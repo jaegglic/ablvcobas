@@ -6,6 +6,11 @@ in:
     klinik-fuer-innere-medizin-am-kantonsspital-frauenfeld/nephrologie/
     informationen-fuer-aerzte-und-zuweiser/
     chronische-nierenerkrankung-definitionstadieneinteilung/
+
+
+
+ATTENTION:
+    !!! It uses the same data for training and testing!!!!!!
 """
 
 # Standard library
@@ -37,14 +42,46 @@ CATEGORIES = OrderedDict({
     'G12': (60, 999),
     'G3a': (45, 60),
     'G3b': (30, 45),
-    'G45': ( 0, 30),
+    'G4':  (15, 30),
+    'G5':  ( 0, 15),
 })
+# CATEGORIES = OrderedDict({
+#     'G12': (60, 999),
+#     'G3a': (45, 60),
+#     'G3b': (30, 45),
+#     'G45': ( 0, 30),
+# })
 NM_PREDICTORS = [
     nm_pred_reg_lin,
     nm_pred_reg_scipy,
     nm_pred_reg_pb,
     nm_pred_reg_dem,
 ]
+
+
+def print_confusion_matrix(cm, normalize=False, title=None):
+    print('\n')
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print(f"Confusion matrix (normalized): {title}")
+    else:
+        print(f"Confusion matrix (non-normalized): {title}")
+
+    print(cm)
+    n_tot = np.sum(np.sum(cm))
+    n_true = np.sum(np.diag(cm))
+    n_false = n_tot - n_true
+    print(f'n_tot            {n_tot:4d}')
+    print(f'n_true           {n_true:4d} (p = {n_true / n_tot:.4f})')
+    print(f'n_false          {n_false:4d} (p = {n_false / n_tot:.4f})')
+    for i in range(1, cm.shape[0]):
+        n_false_i_m = np.sum(np.diag(cm, k=-i))
+        n_false_i_p = np.sum(np.diag(cm, k=i))
+        n_false_i = n_false_i_p + n_false_i_m
+        print(f'    dist = {i}     {n_false_i:4d} (p = {n_false_i / n_tot:.4f})')
+        if n_false_i > 0:
+            print(f'        too low  {n_false_i_p:4d} (p = {n_false_i_p / n_tot:.4f})')
+            print(f'        too high {n_false_i_m:4d} (p = {n_false_i_m / n_tot:.4f})')
 
 
 def plot_confusion_matrix(y_true,
@@ -66,28 +103,6 @@ def plot_confusion_matrix(y_true,
     cm = confusion_matrix(y_true, y_pred)
     # Only use the labels that appear in the data
     classes = classes[unique_labels(y_true, y_pred)]
-    print('\n')
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print(f"Confusion matrix (normalized): {title}")
-    else:
-        print(f"Confusion matrix (non-normalized): {title}")
-
-    print(cm)
-    n_tot = np.sum(np.sum(cm))
-    n_true = np.sum(np.diag(cm))
-    n_false = n_tot - n_true
-    print(f'n_tot           {n_tot:4d}')
-    print(f'n_true          {n_true:4d} (p = {n_true / n_tot:.4f})')
-    print(f'n_false         {n_false:4d} (p = {n_false / n_tot:.4f})')
-    for i in range(1, cm.shape[0]):
-        n_false_i_m = np.sum(np.diag(cm, k=-i))
-        n_false_i_p = np.sum(np.diag(cm, k=i))
-        n_false_i = n_false_i_p + n_false_i_m
-        print(f'    dist = {i}    {n_false_i:4d} (p = {n_false_i / n_tot:.4f})')
-        if n_false_i > 0:
-            print(f'        to high {n_false_i_p:4d} (p = {n_false_i_p / n_tot:.4f})')
-            print(f'        to low  {n_false_i_m:4d} (p = {n_false_i_m / n_tot:.4f})')
 
     fig, ax = plt.subplots()
     cmap = plt.get_cmap(nm_cmap)
@@ -150,7 +165,10 @@ if __name__ == '__main__':
     # Plot confusion matrix
     classes = np.array(list(CATEGORIES.keys()), dtype='<U10')
     for y_pred_cat_i, nm_pred in zip(y_pred_cat, NM_PREDICTORS):
+        cm = confusion_matrix(y_true_cat, y_pred_cat_i)
         title = nm_pred.split('.')[0]
+
+        print_confusion_matrix(cm, title=title)
         plot_confusion_matrix(y_true_cat, y_pred_cat_i,
                               title=title,
                               classes=classes)
