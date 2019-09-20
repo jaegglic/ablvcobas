@@ -154,7 +154,7 @@ if __name__ == '__main__':
     print(f'Slope     = {b_1_dem} CI = {ci_b_1_dem}')
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 6))
-    fig.suptitle('Passing-Pablok regression')
+    fig.suptitle('Deming regression')
     # std_b_0_dem = (ci_b_0_dem[1]-ci_b_0_dem[0]) / (2*std_fact)
     # std_b_1_dem = (ci_b_1_dem[1]-ci_b_1_dem[0]) / (2*std_fact)
     # for i in range(1000):
@@ -162,7 +162,7 @@ if __name__ == '__main__':
     #     b_1_i = b_1_dem + std_b_1_dem*np.random.randn(1)
     #     ax[0].plot(X, b_0_i + b_1_i*X, color=(0.6, 0.6, 0.6))
     ax[0].scatter(X, y, s=1)
-    ax[0].plot(X, b_0_pb + X * b_1_pb)
+    ax[0].plot(X, b_0_dem + X * b_1_dem)
     ax[1].set_title('Bland-Altman Plot')
     diff = y_pred_dem - y
     mn, std = np.mean(diff), np.std(diff)

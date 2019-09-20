@@ -190,16 +190,16 @@ def passing_bablok(x, y, alpha=0.05):
     return b_0, b_1, ci_b_0, ci_b_1
 
 
-def deming_reg(x, y, std_ratio, alpha=0.05):
+def deming_reg(x, y, ratio, alpha=0.05):
     """ Computes the Deming regression as proposed in
             https://en.wikipedia.org/wiki/Deming_regression.
-    
+
     Args:
         x (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
             it will be flattened to 1-D.
         y (array_like, shape=(n,)): Arrays of values. If the array is not 1-D,
             it will be flattened to 1-D.
-        std_ratio (float): Ratio of the standard deviation in x and y.
+        ratio (float): Ratio of the variance in x and y.
         alpha (float, optional): Significance level
 
     Returns:
@@ -219,16 +219,15 @@ def deming_reg(x, y, std_ratio, alpha=0.05):
     elif n <= 1:
         raise ValueError('x and y must have size > 2.')
 
-    # Solution
-    delta = std_ratio ** 2
-    b_0, b_1 = _deming_reg(x, y, n, delta)
+    # Deming regression intercept (b_0) and slope (b_1)
+    b_0, b_1 = _deming_reg(x, y, ratio)
 
     # Compute star values
-    x_star = x + (b_1/(b_1**2 + delta)) * (y - b_0 - b_1*x)
+    x_star = x + (b_1/(b_1**2 + ratio)) * (y - b_0 - b_1*x)
     y_star = b_0 + b_1*x_star
 
     # Compute confidence interval
-    std_b_0, std_b_1 = _jackknife_deming_reg(x, y, n, delta)
+    std_b_0, std_b_1 = _jackknife_deming_reg(x, y, ratio)
     z_val = norm.ppf(1 - alpha / 2)
     d_b_0 = z_val * std_b_0
     d_b_1 = z_val * std_b_1
@@ -238,43 +237,92 @@ def deming_reg(x, y, std_ratio, alpha=0.05):
     return b_0, b_1, ci_b_0, ci_b_1, x_star, y_star
 
 
-def _deming_reg(x, y, n, delta):
+def _deming_reg(x, y, ratio=None):
     """ The very central computation of Deming regression. This is outsourced
-    for the jackknife method to be able to call it."""
+    for the jackknife method to be able to call it.
+    """
+    x = np.asarray(x)
+    y = np.asarray(y)
+
+    # If ratio is unknown compute an empirical representation of it
+    if ratio is None:
+        ratio = _variance_ratio(x, y)
+
+    # Flatten the arrays and take all values into account
+    x = x.ravel()
+    y = y.ravel()
+
     x_mean, y_mean = np.mean(x), np.mean(y)
     x_diff, y_diff = (x - x_mean), (y - y_mean)
 
-    s_xx = sum(x_diff ** 2) / (n - 1)
-    s_xy = sum(x_diff * y_diff) / (n - 1)
-    s_yy = sum(y_diff ** 2) / (n - 1)
+    d_xx = sum(x_diff**2)
+    d_yy = sum(y_diff**2)
+    d_xy = sum(x_diff * y_diff)
 
-    s_yy_ds_xx = s_yy - delta * s_xx
-    b_1 = (s_yy_ds_xx + np.sqrt(s_yy_ds_xx ** 2 + 4 * delta * (s_xy ** 2))) / (
-                2 * s_xy)
-    b_0 = y_mean - b_1 * x_mean
+    vardyy_dxx = ratio*d_yy - d_xx
+    b_1 = ( vardyy_dxx + np.sqrt(vardyy_dxx**2 + 4*ratio*(d_xy**2)) )\
+          / ( 2*ratio*d_xy )
+    b_0 = y_mean - b_1*x_mean
+
     return b_0, b_1
 
 
-def _jackknife_deming_reg(x, y, n, delta):
+def _variance_ratio(x, y):
+    """ Computes the empirical ratio of the variance of x and y (being 2-dim
+    arrays).
+    """
+    if not x.ndim == 2 or not y.ndim == 2:
+        raise ValueError('If ratio of variance is unknown, x and y arrays '
+                         'must be 2-dimensional')
+
+    n_x, k_x = x.shape
+    n_y, k_y = y.shape
+
+    x_mean_i = np.mean(x, axis=1).reshape((n_x, 1))
+    y_mean_i = np.mean(y, axis=1).reshape((n_y, 1))
+
+    var_x = sum(np.sum((x - x_mean_i) ** 2, axis=1)) / (n_x * (k_x - 1))
+    var_y = sum(np.sum((y - y_mean_i) ** 2, axis=1)) / (n_y * (k_y - 1))
+
+    return var_x / var_y
+
+
+def _jackknife_deming_reg(x, y, ratio=None):
     """ Jackknife method for estimating the standard deviation from Deming's
     regression.
     """
-    b_0, b_1 = _deming_reg(x, y, n, delta)
+    x = np.asarray(x)
+    y = np.asarray(y)
 
+    # If ratio is unknown compute an empirical representation of it
+    if ratio is None:
+        ratio = _variance_ratio(x, y)
+
+    # Get initial guess
+    b_0, b_1 = _deming_reg(x, y, ratio)
+
+    # Flatten the arrays for computing more jackknife guesses
+    x = x.ravel()
+    y = np.asarray(y).ravel()
+    n = x.size
+
+    # Get leave-one-out guesses
     b_0_lst, b_1_lst = [], []
     for i in range(n):
-        idx = np.concatenate((np.arange(0, i), np.arange(i+1, n)))
-        b_0_i, b_1_i = _deming_reg(x[idx], y[idx], n-1, delta)
+        idx = np.concatenate((np.arange(0, i), np.arange(i + 1, n)))
+        b_0_i, b_1_i = _deming_reg(x[idx], y[idx], ratio)
         b_0_lst.append(b_0_i)
         b_1_lst.append(b_1_i)
     b_0_lst, b_1_lst = np.array(b_0_lst), np.array(b_1_lst)
 
+    # Compute jackknive estimator based on the pseudo-variates
     b_0_pseudo = n*b_0 - (n-1)*b_0_lst
     b_1_pseudo = n*b_1 - (n-1)*b_1_lst
-    b_0_jk = np.mean(b_0_pseudo)
-    b_1_jk = np.mean(b_1_pseudo)
+    b_0_jack = np.mean(b_0_pseudo)
+    b_1_jack = np.mean(b_1_pseudo)
 
-    std_b_0 = np.sqrt(np.sum((b_0_pseudo-b_0_jk)**2)/(n*(n-1)))
-    std_b_1 = np.sqrt(np.sum((b_1_pseudo-b_1_jk)**2)/(n*(n-1)))
+    # Compute standard-deviation
+    std_b_0 = np.sqrt(np.sum((b_0_pseudo-b_0_jack)**2)/(n*(n-1)))
+    std_b_1 = np.sqrt(np.sum((b_1_pseudo-b_1_jack)**2)/(n*(n-1)))
 
     return std_b_0, std_b_1
