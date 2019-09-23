@@ -20,7 +20,7 @@ import pickle
 # Third party requirements
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, cohen_kappa_score
 from sklearn.utils.multiclass import unique_labels
 
 # Local imports
@@ -139,7 +139,7 @@ def plot_confusion_matrix(y_true,
 
 if __name__ == '__main__':
     # Load data
-    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
         _, y_true = pickle.load(mfile)
 
     y_pred = []
@@ -172,6 +172,21 @@ if __name__ == '__main__':
         plot_confusion_matrix(y_true_cat, y_pred_cat_i,
                               title=title,
                               classes=classes)
+
+        # Compute and plot cohen's kappa score
+        # The baseline probability is the "agreement by chance" (see p_e in the
+        # Wikipedia article https://en.wikipedia.org/wiki/Cohen%27s_kappa)
+        n = np.sum(np.sum(cm))
+        p_e = sum(np.sum(cm, axis=0) * np.sum(cm, axis=1) / (n**2))
+        coh_k_nw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights=None)
+        coh_k_lw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights='linear')
+        coh_k_qw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights='quadratic')
+        print("\nCohen's kappa")
+        print(f"    Baseline        = {p_e:.4f}")
+        print(f"    No weights      = {coh_k_nw:.4f}")
+        print(f"    Lin. weights    = {coh_k_lw:.4f}")
+        print(f"    Quadr. weights  = {coh_k_qw:.4f}")
+
 
     plt.show()
 

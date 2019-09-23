@@ -14,8 +14,8 @@ import numpy as np
 from src._paths import PATH_DATA_RAW, PATH_DATA_PROCESSED
 
 # Choose modeling strategy
-nm_data_file_modeling = '60vs53'
-# nm_data_file_modeling = '177vs64'
+# nm_data_file_modeling = '60vs53'
+nm_data_file_modeling = '177vs64'
 
 
 if nm_data_file_modeling == '60vs53':

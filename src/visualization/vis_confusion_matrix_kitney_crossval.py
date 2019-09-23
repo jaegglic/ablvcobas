@@ -15,7 +15,7 @@ import pickle
 
 # Third party requirements
 import numpy as np
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, cohen_kappa_score
 
 # Local imports
 from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
@@ -36,6 +36,12 @@ if __name__ == '__main__':
     cm_lin = np.zeros((len(CATEGORIES), len(CATEGORIES)), dtype='int32')
     cm_pb = np.zeros((len(CATEGORIES), len(CATEGORIES)), dtype='int32')
     cm_dem = np.zeros((len(CATEGORIES), len(CATEGORIES)), dtype='int32')
+    p_e_lin = 0
+    p_e_pb = 0
+    p_e_dem = 0
+    coh_k_lin = 0
+    coh_k_pb = 0
+    coh_k_dem = 0
     for k, (train_index, test_index) in enumerate(kf.split(X)):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
@@ -74,12 +80,40 @@ if __name__ == '__main__':
 
         # Compute mean of confusion matrix
         labels = range(len(CATEGORIES))
-        cm_lin += confusion_matrix(y_test_cat, y_pred_lin_cat, labels=labels)
-        cm_pb += confusion_matrix(y_test_cat, y_pred_pb_cat, labels=labels)
-        cm_dem += confusion_matrix(y_test_cat, y_pred_dem_cat, labels=labels)
+        cm_lin_i  = confusion_matrix(y_test_cat, y_pred_lin_cat, labels=labels)
+        cm_pb_i   = confusion_matrix(y_test_cat, y_pred_pb_cat, labels=labels)
+        cm_dem_i  = confusion_matrix(y_test_cat, y_pred_dem_cat, labels=labels)
+
+        cm_lin  += cm_lin_i
+        cm_pb   += cm_pb_i
+        cm_dem  += cm_dem_i
+
+        # Compute and plot cohen's kappa score
+        # The baseline probability is the "agreement by chance" (see p_e in the
+        # Wikipedia article https://en.wikipedia.org/wiki/Cohen%27s_kappa)
+        n_lin = np.sum(np.sum(cm_lin_i))
+        n_pb = np.sum(np.sum(cm_pb_i))
+        n_dem = np.sum(np.sum(cm_dem_i))
+
+        p_e_lin += sum(np.sum(cm_lin_i, axis=0) * np.sum(cm_lin_i, axis=1) / (n_lin ** 2)) / kf.n_splits
+        p_e_pb += sum(np.sum(cm_pb_i, axis=0) * np.sum(cm_pb_i, axis=1) / (n_pb ** 2)) / kf.n_splits
+        p_e_dem += sum(np.sum(cm_dem_i, axis=0) * np.sum(cm_dem_i, axis=1) / (n_dem ** 2)) / kf.n_splits
+
+        coh_k_lin += cohen_kappa_score(y_test_cat, y_pred_lin_cat, weights=None) / kf.n_splits
+        coh_k_pb += cohen_kappa_score(y_test_cat, y_pred_pb_cat, weights=None) / kf.n_splits
+        coh_k_dem += cohen_kappa_score(y_test_cat, y_pred_dem_cat, weights=None) / kf.n_splits
 
     # Print confusion matrix
     print_confusion_matrix(cm_lin, title='Linear')
+    print("\nCohen's kappa")
+    print(f"    Baseline        = {p_e_lin:.4f}")
+    print(f"    No weights      = {coh_k_lin:.4f}")
     print_confusion_matrix(cm_pb, title='Passing-Bablok')
+    print("\nCohen's kappa")
+    print(f"    Baseline        = {p_e_pb:.4f}")
+    print(f"    No weights      = {coh_k_pb:.4f}")
     print_confusion_matrix(cm_dem, title='Deming')
+    print("\nCohen's kappa")
+    print(f"    Baseline        = {p_e_dem:.4f}")
+    print(f"    No weights      = {coh_k_dem:.4f}")
 
