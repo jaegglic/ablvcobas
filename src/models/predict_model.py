@@ -25,7 +25,7 @@ _FIG_SIZE = (15, 6)
 _SCATTER_SIZE = 1
 
 # Load data
-with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
     X_train, y_train = pickle.load(mfile)
 
 # Load trained models
@@ -46,10 +46,10 @@ y_pred_pb = b_0_pb + b_1_pb * X_pred
 y_pred_dem = b_0_dem + b_1_dem * X_pred
 
 # Save predictions
-nm_pred_reg_lin  = 'pred_reg_lin.pred'
-nm_pred_reg_scipy  = 'pred_reg_scipy.pred'
-nm_pred_reg_pb   = 'pred_reg_pb.pred'
-nm_pred_reg_dem  = 'pred_reg_dem.pred'
+nm_pred_reg_lin    = f'{nm_data_file_modeling}_pred_reg_lin.pred'
+nm_pred_reg_scipy  = f'{nm_data_file_modeling}_pred_reg_scipy.pred'
+nm_pred_reg_pb     = f'{nm_data_file_modeling}_pred_reg_pb.pred'
+nm_pred_reg_dem    = f'{nm_data_file_modeling}_pred_reg_dem.pred'
 with open(PATH_MODELS + nm_pred_reg_lin, 'wb') as pfile:
     pickle.dump((X_pred, y_pred_lin), pfile)
 with open(PATH_MODELS + nm_pred_reg_scipy, 'wb') as pfile:

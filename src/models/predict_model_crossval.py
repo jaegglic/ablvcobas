@@ -20,7 +20,7 @@ from src.models.train_model_crossval import NM_KF
 
 if __name__ == '__main__':
     # Load data
-    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
         X, y = pickle.load(mfile)
     with open(PATH_MODELS + NM_KF, 'rb') as kfile:
         kf = pickle.load(kfile)
@@ -30,9 +30,9 @@ if __name__ == '__main__':
         X_pred = X[ind_pred]
 
         # Load trained models
-        nm_mod_reg_lin_k = f'mod_reg_lin_k{k:02d}.mod'
-        nm_mod_reg_pb_k = f'mod_reg_pb_k{k:02d}.mod'
-        nm_mod_reg_dem_k = f'mod_reg_dem_k{k:02d}.mod'
+        nm_mod_reg_lin_k  = f'{nm_data_file_modeling}_mod_reg_lin_k{k:02d}.mod'
+        nm_mod_reg_pb_k   = f'{nm_data_file_modeling}_mod_reg_pb_k{k:02d}.mod'
+        nm_mod_reg_dem_k  = f'{nm_data_file_modeling}_mod_reg_dem_k{k:02d}.mod'
         with open(PATH_MODELS + nm_mod_reg_lin_k, 'rb') as pfile:
             b_0_lin, b_1_lin, _, _ = pickle.load(pfile)
         with open(PATH_MODELS + nm_mod_reg_pb_k, 'rb') as pfile:
@@ -46,9 +46,9 @@ if __name__ == '__main__':
         y_pred_dem = b_0_dem + b_1_dem * X_pred
 
         # Save predictions
-        nm_pred_reg_lin_k = f'pred_reg_lin_k{k:02d}.pred'
-        nm_pred_reg_pb_k = f'pred_reg_pb_k{k:02d}.pred'
-        nm_pred_reg_dem_k = f'pred_reg_dem_k{k:02d}.pred'
+        nm_pred_reg_lin_k  = f'{nm_data_file_modeling}_pred_reg_lin_k{k:02d}.pred'
+        nm_pred_reg_pb_k   = f'{nm_data_file_modeling}_pred_reg_pb_k{k:02d}.pred'
+        nm_pred_reg_dem_k  = f'{nm_data_file_modeling}_pred_reg_dem_k{k:02d}.pred'
         with open(PATH_MODELS + nm_pred_reg_lin_k, 'wb') as pfile:
             pickle.dump((X_pred, y_pred_lin), pfile)
         with open(PATH_MODELS + nm_pred_reg_pb_k, 'wb') as pfile:

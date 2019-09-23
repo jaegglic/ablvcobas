@@ -25,7 +25,7 @@ NM_KF = 'kfold.kf'
 
 if __name__ == '__main__':
     # Load data
-    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
         X, y = pickle.load(mfile)
 
     # Cross-validation splits
@@ -45,9 +45,9 @@ if __name__ == '__main__':
             = utl.deming_reg(X_train, y_train, STD_RATIO)
 
         # Save trained models
-        nm_mod_reg_lin_k = f'mod_reg_lin_k{k:02d}.mod'
-        nm_mod_reg_pb_k = f'mod_reg_pb_k{k:02d}.mod'
-        nm_mod_reg_dem_k = f'mod_reg_dem_k{k:02d}.mod'
+        nm_mod_reg_lin_k  = f'{nm_data_file_modeling}_mod_reg_lin_k{k:02d}.mod'
+        nm_mod_reg_pb_k   = f'{nm_data_file_modeling}_mod_reg_pb_k{k:02d}.mod'
+        nm_mod_reg_dem_k  = f'{nm_data_file_modeling}_mod_reg_dem_k{k:02d}.mod'
 
         with open(PATH_MODELS + nm_mod_reg_lin_k, 'wb') as pfile:
             pickle.dump((b_0_lin, b_1_lin, ci_b_0_lin, ci_b_1_lin), pfile)

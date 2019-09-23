@@ -20,7 +20,7 @@ from src._paths import PATH_DATA_PROCESSED
 from src.features.build_features import nm_data_file_modeling
 
 # Load data
-with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
     X, y = pickle.load(mfile)
 
 
@@ -56,10 +56,10 @@ if __name__ == '__main__':
     print(head_line)
     print('-'*len(head_line))
 
-    str_177 = f'{"177 ":>{spf}}|' + _str_for_stats(X, spf, prec)
-    str_64 = f'{"64 ":>{spf}}|' + _str_for_stats(y, spf, prec)
-    print(str_177)
-    print(str_64)
+    str_X = f'{"X ":>{spf}}|' + _str_for_stats(X, spf, prec)
+    str_y = f'{"y ":>{spf}}|' + _str_for_stats(y, spf, prec)
+    print(str_X)
+    print(str_y)
 
     # Compute correlation statistics
     print('\nCorrelation statistics')

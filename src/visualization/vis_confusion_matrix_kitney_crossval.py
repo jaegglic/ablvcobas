@@ -27,7 +27,7 @@ from src.models.train_model_crossval import NM_KF
 
 if __name__ == '__main__':
     # Load data
-    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
         X, y = pickle.load(mfile)
     with open(PATH_MODELS + NM_KF, 'rb') as kfile:
         kf = pickle.load(kfile)
@@ -41,9 +41,9 @@ if __name__ == '__main__':
         y_train, y_test = y[train_index], y[test_index]
 
         # Load predictions
-        nm_pred_reg_lin_k = f'pred_reg_lin_k{k:02d}.pred'
-        nm_pred_reg_pb_k = f'pred_reg_pb_k{k:02d}.pred'
-        nm_pred_reg_dem_k = f'pred_reg_dem_k{k:02d}.pred'
+        nm_pred_reg_lin_k  = f'{nm_data_file_modeling}_pred_reg_lin_k{k:02d}.pred'
+        nm_pred_reg_pb_k   = f'{nm_data_file_modeling}_pred_reg_pb_k{k:02d}.pred'
+        nm_pred_reg_dem_k  = f'{nm_data_file_modeling}_pred_reg_dem_k{k:02d}.pred'
         with open(PATH_MODELS + nm_pred_reg_lin_k, 'rb') as pfile:
             _, y_pred_lin = pickle.load(pfile)
         with open(PATH_MODELS + nm_pred_reg_pb_k, 'rb') as pfile:

@@ -21,11 +21,11 @@ from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
 
 # Standard error ratio for deming regression
-# STD_RATIO = 1.006526380968051       # Fix point
-STD_RATIO = 1.096985                # Radio of CV -> vis_basic_stats.py
+STD_RATIO = 1.068797680496178       # Fix point 60vs53
+# STD_RATIO = 1.006406118665088       # Fix point 177vs64
 
 # Load data
-with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
     X, y = pickle.load(mfile)
 
 # Train models
@@ -33,13 +33,13 @@ b_0_lin, b_1_lin, ci_b_0_lin, ci_b_1_lin = utl.lin_reg(X, y)
 b_1_scipy, b_0_scipy, _, _, _ = stats.linregress(X, y)
 b_0_pb, b_1_pb, ci_b_0_pb, ci_b_1_pb = utl.passing_bablok(X, y)
 b_0_dem, b_1_dem, ci_b_0_dem, ci_b_1_dem, x_star, y_star = \
-    utl.deming_reg(X, y, STD_RATIO)
+    utl.deming_reg(X, y, STD_RATIO**2)
 
 # Save trained models
-nm_mod_reg_lin  = 'mod_reg_lin.mod'
-nm_mod_reg_scipy  = 'mod_reg_scipy.mod'
-nm_mod_reg_pb   = 'mod_reg_pb.mod'
-nm_mod_reg_dem  = 'mod_reg_dem.mod'
+nm_mod_reg_lin    = f'{nm_data_file_modeling}_mod_reg_lin.mod'
+nm_mod_reg_scipy  = f'{nm_data_file_modeling}_mod_reg_scipy.mod'
+nm_mod_reg_pb     = f'{nm_data_file_modeling}_mod_reg_pb.mod'
+nm_mod_reg_dem    = f'{nm_data_file_modeling}_mod_reg_dem.mod'
 
 with open(PATH_MODELS + nm_mod_reg_lin, 'wb') as pfile:
     pickle.dump((b_0_lin, b_1_lin, ci_b_0_lin, ci_b_1_lin), pfile)

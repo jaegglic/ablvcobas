@@ -67,7 +67,7 @@ if __name__ == '__main__':
                 f'{"R^2":^{spf}}|'
 
     # Load data
-    with open(PATH_DATA_PROCESSED + nm_data_file_modeling, 'rb') as mfile:
+    with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
         X, y = pickle.load(mfile)
     with open(PATH_MODELS + nm_pred_reg_lin, 'rb') as pfile:
         _, y_pred_lin = pickle.load(pfile)

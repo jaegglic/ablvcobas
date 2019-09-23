@@ -176,7 +176,7 @@ def passing_bablok(x, y, alpha=0.05):
 
     # Compute the intercept b_0 and the slope b_1 of the regression line
     S_ij = np.sort(S_ij, kind='mergesort')
-    ind_med = np.argwhere(S_ij >= np.median(S_ij))[0]
+    ind_med = int(np.argwhere(S_ij >= np.median(S_ij))[0])
     b_1 = float(S_ij[ind_med + counter])
     b_0 = np.median(y - b_1*x)
 
@@ -186,7 +186,8 @@ def passing_bablok(x, y, alpha=0.05):
     m_lo = int(round((N - c_alpha)/2))
     m_hi = N - m_lo + 1
     ci_b_1 = (S_ij[m_lo + counter], S_ij[m_hi + counter])
-    ci_b_0 = (np.median(y - ci_b_1[0]*x), np.median(y - ci_b_1[1]*x))
+    ci_b_0_cand = (np.median(y - ci_b_1[1]*x), np.median(y - ci_b_1[0]*x))
+    ci_b_0 = (min(ci_b_0_cand), max(ci_b_0_cand))
 
     return b_0, b_1, ci_b_0, ci_b_1
 
