@@ -7,6 +7,8 @@ taken from
 https://ncss-wpengine.netdna-ssl.com/wp-content/themes/ncss/pdf/Procedures/
         NCSS/Deming_Regression.pdf
 
+CAUTION:
+They might be corrupted because I do not have the appropriate dataset.
 """
 
 # Standard library
@@ -18,8 +20,8 @@ import numpy as np
 # Local imports
 import src.utils as utl
 
-PREC_DEC = 5
-RATIO = 4
+PREC_DEC = 3
+RATIO = 5
 ALPHA = 0.05
 
 
@@ -55,7 +57,7 @@ class TestCopyOnWrite(unittest.TestCase):
             [146, 145],
         ])
 
-    # Demin Regression Tests
+    # Deming Regression Tests
     def test_deming_reg_known_ratio(self):
         b_0_true, b_1_true = -0.0897449, 1.001194
         ci_b_0_true = (-4.06065, 3.88117)

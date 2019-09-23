@@ -130,6 +130,7 @@ def passing_bablok(x, y, alpha=0.05):
                analytical methods". J. Clin Chem. Clin. Biochem., 21:709-720,
                1983.
     """
+    LARGE_NUMBER = np.inf
 
     x = np.asarray(x).ravel()
     y = np.asarray(y).ravel()
@@ -154,19 +155,19 @@ def passing_bablok(x, y, alpha=0.05):
             if isclose(x_i, x_j):
                 # Distinguish the following cases
                 #   - y_j == y_i: omit these pairs (we have 0/0)
-                #   - y_j > y_i: put a very large number (we have oo/0)
-                #   - y_j < y_i: put a very small number (we have -oo/0)
+                #   - y_j > y_i: put a very large number (we obtain oo)
+                #   - y_j < y_i: put a very small number (we obtain -oo)
                 if y_j > y_i:
-                    S_ij.append(np.inf)
+                    S_ij.append(LARGE_NUMBER)
                 elif y_j < y_i:
-                    S_ij.append(-np.inf)
+                    S_ij.append(-LARGE_NUMBER)
 
             else:
+                S_ij_cand = (y_j-y_i) / (x_j-x_i)
                 # Distinguish the following cases
                 #   - S_ij > -1: add it to the list
                 #   - S_ij = -1: omit these pairs
                 #   - S_ij < -1: use it and add one to the counter
-                S_ij_cand = (y_j-y_i) / (x_j-x_i)
                 if S_ij_cand > -1:
                     S_ij.append(S_ij_cand)
                 elif S_ij_cand < -1:
@@ -205,7 +206,8 @@ def deming_reg(x, y, ratio, alpha=0.05):
     Returns:
         b_0 (float): Intercept of the linear regression line
         b_1 (float): Slope of the linear regression line
-        x_star (ndarray, shape=(n,)): Array for the x_star values
+        x_star (ndarray, shape=(n,)): Array for the x_star values such that we
+            have the "best possible fit" for y_star = b_0 + b_1*x_star
         y_star (ndarray, shape=(n,)): Array for the y_star values
 
     """
@@ -222,8 +224,8 @@ def deming_reg(x, y, ratio, alpha=0.05):
     # Deming regression intercept (b_0) and slope (b_1)
     b_0, b_1 = _deming_reg(x, y, ratio)
 
-    # Compute star values
-    x_star = x + (b_1/(b_1**2 + ratio)) * (y - b_0 - b_1*x)
+    # Compute star values for the best fit in y_star = b_0 + b_1*x_star
+    x_star = x + (b_1/(b_1**2 + 1/ratio)) * (y - b_0 - b_1*x)
     y_star = b_0 + b_1*x_star
 
     # Compute confidence interval
@@ -252,6 +254,7 @@ def _deming_reg(x, y, ratio=None):
     x = x.ravel()
     y = y.ravel()
 
+    # Compute the linear regression line
     x_mean, y_mean = np.mean(x), np.mean(y)
     x_diff, y_diff = (x - x_mean), (y - y_mean)
 
