@@ -21,19 +21,10 @@ from sklearn.metrics import confusion_matrix
 from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
 from src.visualization.vis_confusion_matrix_kitney import CATEGORIES, \
-    print_confusion_matrix
+    print_confusion_matrix, print_agreement
 from src.models.train_model_crossval import NM_KF
 from src.utils import cohen_kappa, fleiss_kappa
 
-
-def _print_agreement(base, coh_k, fl_k):
-    """ Print the agreement values"""
-    prec = 8
-
-    print("Agreement Statistics")
-    print(f"    Baseline        = {base:.{prec}f}")
-    print(f"    Cohen's kappa   = {coh_k:.{prec}f}")
-    print(f"    Fleiss' kappa   = {fl_k:.{prec}f}")
 
 
 if __name__ == '__main__':
@@ -133,7 +124,7 @@ if __name__ == '__main__':
     print('-' * len_sep)
     print_confusion_matrix(cm_lin, title='')
     print('\n')
-    _print_agreement(p_e_lin, coh_k_lin, fl_k_lin)
+    print_agreement(p_e_lin, coh_k_lin, fl_k_lin)
     print('-' * len_sep)
 
     print('\n\n' + '-' * len_sep)
@@ -141,7 +132,7 @@ if __name__ == '__main__':
     print('-' * len_sep)
     print_confusion_matrix(cm_pb, title='')
     print('\n')
-    _print_agreement(p_e_pb, coh_k_pb, fl_k_pb)
+    print_agreement(p_e_pb, coh_k_pb, fl_k_pb)
     print('-' * len_sep)
 
     print('\n\n' + '-' * len_sep)
@@ -149,6 +140,6 @@ if __name__ == '__main__':
     print('-' * len_sep)
     print_confusion_matrix(cm_dem, title='')
     print('\n')
-    _print_agreement(p_e_dem, coh_k_dem, fl_k_dem)
+    print_agreement(p_e_dem, coh_k_dem, fl_k_dem)
     print('-' * len_sep)
 

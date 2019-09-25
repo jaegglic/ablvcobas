@@ -20,7 +20,7 @@ import pickle
 # Third party requirements
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, cohen_kappa_score
+from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 
 # Local imports
@@ -28,6 +28,7 @@ from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
 from src.models.predict_model import nm_pred_reg_lin, nm_pred_reg_scipy, \
     nm_pred_reg_pb, nm_pred_reg_dem
+from src.utils import cohen_kappa, fleiss_kappa
 
 # Constants
 # CATEGORIES = OrderedDict({
@@ -136,6 +137,16 @@ def plot_confusion_matrix(y_true,
     return ax
 
 
+def print_agreement(base, coh_k, fl_k):
+    """ Print the agreement values"""
+    prec = 8
+
+    print("Agreement Statistics")
+    print(f"    Baseline        = {base:.{prec}f}")
+    print(f"    Cohen's kappa   = {coh_k:.{prec}f}")
+    print(f"    Fleiss' kappa   = {fl_k:.{prec}f}")
+
+
 if __name__ == '__main__':
     # Load data
     with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
@@ -163,6 +174,7 @@ if __name__ == '__main__':
 
     # Plot confusion matrix
     classes = np.array(list(CATEGORIES.keys()), dtype='<U10')
+    categories = np.arange(len(CATEGORIES))
     for y_pred_cat_i, nm_pred in zip(y_pred_cat, NM_PREDICTORS):
         cm = confusion_matrix(y_true_cat, y_pred_cat_i)
         title = nm_pred.split('.')[0]
@@ -177,14 +189,10 @@ if __name__ == '__main__':
         # Wikipedia article https://en.wikipedia.org/wiki/Cohen%27s_kappa)
         n = np.sum(np.sum(cm))
         p_e = sum(np.sum(cm, axis=0) * np.sum(cm, axis=1) / (n**2))
-        coh_k_nw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights=None)
-        coh_k_lw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights='linear')
-        coh_k_qw = cohen_kappa_score(y_true_cat, y_pred_cat_i, weights='quadratic')
-        print("\nCohen's kappa")
-        print(f"    Baseline        = {p_e:.4f}")
-        print(f"    No weights      = {coh_k_nw:.4f}")
-        print(f"    Lin. weights    = {coh_k_lw:.4f}")
-        print(f"    Quadr. weights  = {coh_k_qw:.4f}")
+        ratings = np.array([y_true_cat, y_pred_cat_i]).transpose()
+        coh_k = cohen_kappa(ratings, categories=categories)
+        fl_k = fleiss_kappa(ratings, categories=categories)
+        print_agreement(p_e, coh_k, fl_k)
 
 
     plt.show()

@@ -384,9 +384,11 @@ def cohen_kappa(ratings, categories=None):
 
     n_ki = _cat_rat(ratings, categories)
     p_e = np.sum(np.prod(n_ki, axis=1)) / (N**2)
-    kappa = (p_0  - p_e) / (1 - p_e)
-
-    # kappa = cohen_kappa_score(ratings[:, 0], ratings[:, 1])
+    
+    # Note that 1 - p_e gives the agreement that is attainable above chance,
+    # and p_0 - p_e gives the degree of agreement actually achieved above
+    # chance
+    kappa = (p_0 - p_e) / (1 - p_e)
 
     return kappa
 
@@ -410,14 +412,15 @@ def fleiss_kappa(ratings, categories=None):
 
     n_ij = _subj_cat(ratings, categories)
     p_agree = np.sum(n_ij*(n_ij-1), axis=1) / (n*(n-1))
-    p_cat = np.sum(n_ij, axis=0) / (N*n)
+    p_0 = np.mean(p_agree)
 
-    # Note that 1 - P_e gives the agreement that is attainable above chance,
-    # and P_bar - P_e gives the degree of agreement actually achieved above
+    p_cat = np.sum(n_ij, axis=0) / (N*n)
+    p_e = np.sum(p_cat**2)
+
+    # Note that 1 - p_e gives the agreement that is attainable above chance,
+    # and p_0 - p_e gives the degree of agreement actually achieved above
     # chance
-    P_bar = np.mean(p_agree)
-    P_e = np.sum(p_cat**2)
-    kappa = (P_bar  - P_e) / (1 - P_e)
+    kappa = (p_0 - p_e) / (1 - p_e)
 
     return kappa
 
