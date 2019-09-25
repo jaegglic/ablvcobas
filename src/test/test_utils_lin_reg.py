@@ -11,7 +11,6 @@ import unittest
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from scipy import stats
-import matplotlib.pyplot as plt
 
 # Local imports
 import src.utils as utl

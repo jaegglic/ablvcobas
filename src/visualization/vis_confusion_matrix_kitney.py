@@ -60,7 +60,6 @@ NM_PREDICTORS = [
 
 
 def print_confusion_matrix(cm, normalize=False, title=None):
-    print('\n')
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
         print(f"Confusion matrix (normalized): {title}")

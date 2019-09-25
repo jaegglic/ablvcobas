@@ -330,3 +330,94 @@ def _jackknife_deming_reg(x, y, ratio=None):
     std_b_1 = np.sqrt(np.sum((b_1_pseudo-b_1_jack)**2)/(n*(n-1)))
 
     return std_b_0, std_b_1
+
+
+def _cat_rat(ratings, categories):
+    """ n_ki[k,i] represents the number of times rater i predicted category k
+    """
+    ratings = np.asarray(ratings)
+    N, n = ratings.shape
+    n_cat = len(categories)
+
+    n_ki = np.zeros((n_cat, n))
+    for i_cat, cat in enumerate(categories):
+        n_ki[i_cat, :] = np.sum(ratings == cat, axis=0)
+
+    return n_ki
+
+
+def _subj_cat(ratings, categories):
+    """ n_ij[i,j] represents the number of raters who assigned the i-th subject
+    to the j-th category
+    """
+    ratings = np.asarray(ratings)
+    N, n = ratings.shape
+    n_cat = len(categories)
+
+    n_ij = np.zeros((N, n_cat))
+    for i_cat, cat in enumerate(categories):
+        n_ij[:, i_cat] = np.sum(ratings == cat, axis=1)
+
+    return n_ij
+
+
+def cohen_kappa(ratings, categories=None):
+    """ Computation of Cohen's kappa for assessing the reliability of agreement
+    between a fixed number of raters.
+
+    Args:
+        ratings (array_like, shape=(N, n)): N subjects assessed by n raters
+        categories (array_like, shape=(n_cat)): Rating categories
+
+    Returns:
+        kappa (float): Cohen's kappa value
+    """
+    ratings = np.asarray(ratings)
+    N, n = ratings.shape
+
+    if categories is None:
+        categories = np.unique(ratings.ravel())
+
+    n_ij = _subj_cat(ratings, categories)
+    p_agree = np.sum(n_ij*(n_ij-1), axis=1) / (n*(n-1))
+    p_0 = np.mean(p_agree)
+
+    n_ki = _cat_rat(ratings, categories)
+    p_e = np.sum(np.prod(n_ki, axis=1)) / (N**2)
+    kappa = (p_0  - p_e) / (1 - p_e)
+
+    # kappa = cohen_kappa_score(ratings[:, 0], ratings[:, 1])
+
+    return kappa
+
+
+def fleiss_kappa(ratings, categories=None):
+    """ Computation of Fleiss' kappa for assessing the reliability of agreement
+    between a fixed number of raters.
+
+    Args:
+        ratings (array_like, shape=(N, n)): N subjects assessed by n raters
+        categories (array_like, shape=(n_cat)): Rating categories
+
+    Returns:
+        kappa (float): Fleiss' kappa value
+    """
+    ratings = np.asarray(ratings)
+    N, n = ratings.shape
+
+    if categories is None:
+        categories = np.unique(ratings.ravel())
+
+    n_ij = _subj_cat(ratings, categories)
+    p_agree = np.sum(n_ij*(n_ij-1), axis=1) / (n*(n-1))
+    p_cat = np.sum(n_ij, axis=0) / (N*n)
+
+    # Note that 1 - P_e gives the agreement that is attainable above chance,
+    # and P_bar - P_e gives the degree of agreement actually achieved above
+    # chance
+    P_bar = np.mean(p_agree)
+    P_e = np.sum(p_cat**2)
+    kappa = (P_bar  - P_e) / (1 - P_e)
+
+    return kappa
+
