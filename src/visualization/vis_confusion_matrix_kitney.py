@@ -31,21 +31,21 @@ from src.models.predict_model import nm_pred_reg_lin, nm_pred_reg_scipy, \
 from src.utils import cohen_kappa, fleiss_kappa
 
 # Constants
-# CATEGORIES = OrderedDict({
-#     'G1':  (90, 999),
-#     'G2':  (60, 90),
-#     'G3a': (45, 60),
-#     'G3b': (30, 45),
-#     'G4':  (15, 30),
-#     'G5':  ( 0, 15),
-# })
 CATEGORIES = OrderedDict({
-    'G12': (60, 999),
+    'G1':  (90, 999),
+    'G2':  (60, 90),
     'G3a': (45, 60),
     'G3b': (30, 45),
     'G4':  (15, 30),
     'G5':  ( 0, 15),
 })
+# CATEGORIES = OrderedDict({
+#     'G12': (60, 999),
+#     'G3a': (45, 60),
+#     'G3b': (30, 45),
+#     'G4':  (15, 30),
+#     'G5':  ( 0, 15),
+# })
 # CATEGORIES = OrderedDict({
 #     'G12': (60, 999),
 #     'G3a': (45, 60),
@@ -104,6 +104,12 @@ def plot_confusion_matrix(y_true,
     # Only use the labels that appear in the data
     classes = classes[unique_labels(y_true, y_pred)]
 
+    ax = imshow_confusion_matrix(cm, classes, nm_cmap=nm_cmap)
+
+    return ax
+
+
+def imshow_confusion_matrix(cm, classes, title='', normalize=False, nm_cmap='viridis'):
     fig, ax = plt.subplots()
     cmap = plt.get_cmap(nm_cmap)
     im = ax.imshow(cm, interpolation='nearest', cmap=cmap)
@@ -132,8 +138,9 @@ def plot_confusion_matrix(y_true,
         for j in range(cm.shape[1]):
             ax.text(j, i, format(cm[i, j], fmt),
                     ha="center", va="center",
-                    color="white" if cm[i, j] > thresh else "black")
+                    color="black" if cm[i, j] > thresh else "white")
     fig.tight_layout()
+
     return ax
 
 

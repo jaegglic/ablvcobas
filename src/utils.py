@@ -383,8 +383,8 @@ def cohen_kappa(ratings, categories=None):
     p_0 = np.mean(p_agree)
 
     n_ki = _cat_rat(ratings, categories)
-    p_e = np.sum(np.prod(n_ki, axis=1)) / (N**2)
-    
+    p_e = np.sum(np.prod(n_ki, axis=1)) / (N**n)
+
     # Note that 1 - p_e gives the agreement that is attainable above chance,
     # and p_0 - p_e gives the degree of agreement actually achieved above
     # chance

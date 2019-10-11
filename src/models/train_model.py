@@ -21,8 +21,9 @@ from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
 from src.features.build_features import nm_data_file_modeling
 
 # Standard error ratio for deming regression
-STD_RATIO = 1.068797680496178       # Fix point 60vs53
+# STD_RATIO = 1.068797680496178       # Fix point 60vs53
 # STD_RATIO = 1.006406118665088       # Fix point 177vs64
+STD_RATIO = 1
 
 # Load data
 with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:

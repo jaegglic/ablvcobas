@@ -35,6 +35,10 @@ PATH_DATA_PROCESSED = f'{PATH_DATA}processed{file_sep}'
 # Path to the model folder
 PATH_MODELS         = f'{PATH_ROOT}models{file_sep}'
 
+# Path to the figures
+PATH_REP            = f'{PATH_ROOT}reports{file_sep}'
+PATH_FIG            = f'{PATH_REP}figures{file_sep}'
+
 if __name__ == '__main__':
     _indent = '  '
     print()
