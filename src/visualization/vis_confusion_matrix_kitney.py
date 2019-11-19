@@ -157,7 +157,7 @@ def print_agreement(base, coh_k, fl_k):
 if __name__ == '__main__':
     # Load data
     with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
-        _, y_true = pickle.load(mfile)
+        X, y_true = pickle.load(mfile)
 
     y_pred = []
     y_pred_cat = []
@@ -165,6 +165,7 @@ if __name__ == '__main__':
         with open(PATH_MODELS + nm, 'rb') as pfile:
             _, y_pred_i = pickle.load(pfile)
         y_pred.append(y_pred_i)
+        # y_pred.append(X)
         y_pred_cat.append(np.zeros_like(y_pred_i, dtype='int32'))
 
     # Categorize the values (true and pred)

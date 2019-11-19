@@ -12,12 +12,19 @@ import pickle
 
 # Third party requirements
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.stats import variation, kendalltau, spearmanr
 
 # Local imports
 import src.utils as utl
 from src._paths import PATH_DATA_PROCESSED
 from src.features.build_features import nm_data_file_modeling
+from src.visualization.plot_specs import set_specs
+
+
+# Constants
+STD_FACT = 1.96
+STESABSOLUTILIEBLINGSFARB = (112/255, 28/255, 128/255)
 
 # Load data
 with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
@@ -78,4 +85,39 @@ if __name__ == '__main__':
     print(f"  Spearman's rank:  "
           f"rho = {spear_rho:.{prec}f} "
           f"pval = {spear_p:.{prec}f}")
+
+    fig, ax = plt.subplots(1, 1)
+    xlim = [0, 180]
+    xstd = np.linspace(xlim[0], xlim[1], 10)
+
+    diff = X - y
+    mn, std = np.mean(diff), np.std(diff)
+    ax.plot((X + y) / 2, diff, '.k')
+    ax.axhline(mn, color='red', linestyle='--')
+    ax.axhline(mn - STD_FACT * std,
+               color=STESABSOLUTILIEBLINGSFARB,
+               linestyle='--')
+    ax.axhline(mn + STD_FACT * std,
+               color=STESABSOLUTILIEBLINGSFARB,
+               linestyle='--')
+    set_specs(
+        ax,
+        fig_size=(2.5, 3),
+        x_lim=xlim,
+        y_lim=[-20, 20],
+        y_ticks=[-20, -10, 0, 10, 20],
+    )
+    ax.text(2, mn - STD_FACT * std - 2, f'-{STD_FACT:.2f}*std',
+            verticalalignment='center',
+            fontsize=11,
+            color=STESABSOLUTILIEBLINGSFARB)
+    ax.text(2, mn + STD_FACT * std + 2, f'+{STD_FACT:.2f}*std',
+            verticalalignment='center',
+            fontsize=11,
+            color=STESABSOLUTILIEBLINGSFARB)
+    ax.fill_between(xstd, mn + STD_FACT * std, mn - STD_FACT * std,
+                    color=STESABSOLUTILIEBLINGSFARB,
+                    alpha=0.5
+                    )
+    plt.show()
 
