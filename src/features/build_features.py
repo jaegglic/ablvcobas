@@ -15,7 +15,8 @@ from src._paths import PATH_DATA_RAW, PATH_DATA_PROCESSED
 
 # Choose modeling strategy
 # nm_data_file_modeling = '60vs53'
-nm_data_file_modeling = '177vs64'
+# nm_data_file_modeling = '177vs64'
+nm_data_file_modeling = '176vs64'
 
 
 if nm_data_file_modeling == '60vs53':
@@ -25,6 +26,10 @@ if nm_data_file_modeling == '60vs53':
     # f_trans = np.asarray
 elif nm_data_file_modeling == '177vs64':
     var_nm_X = 'ber. Wert Opus ABL\n(Analyse 177)'
+    var_nm_y = 'Num. eGFR nach CKD-EPI\n(Analyse 64)'
+    f_trans = np.asarray
+elif nm_data_file_modeling == '176vs64':
+    var_nm_X = 'ber. Wert ABL-Gerät\n(Analyse 176)'
     var_nm_y = 'Num. eGFR nach CKD-EPI\n(Analyse 64)'
     f_trans = np.asarray
 else:
@@ -38,6 +43,12 @@ df = pd.read_excel(PATH_DATA_RAW + nm_data_file_raw)
 X = f_trans(df[var_nm_X])
 y = f_trans(df[var_nm_y])
 
+if nm_data_file_modeling == '176vs64':
+    age = np.asarray(df['Alter'])
+    ind_mature = np.where(age >= 18)
+    X = X[ind_mature]
+    y = y[ind_mature]
+    # sex = np.asarray(df['Sex'])[ind_mature]
 
 if not len(X) == len(y):
     raise ValueError("Number of samples in 'X' and 'y' do not match")

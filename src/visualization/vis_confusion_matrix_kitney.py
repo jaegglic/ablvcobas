@@ -22,6 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
+import krippendorff
 
 # Local imports
 from src._paths import PATH_DATA_PROCESSED, PATH_MODELS
@@ -29,6 +30,7 @@ from src.features.build_features import nm_data_file_modeling
 from src.models.predict_model import nm_pred_reg_lin, nm_pred_reg_scipy, \
     nm_pred_reg_pb, nm_pred_reg_dem
 from src.utils import cohen_kappa, fleiss_kappa
+from src.visualization.plot_specs import set_specs
 
 # Constants
 CATEGORIES = OrderedDict({
@@ -122,8 +124,8 @@ def imshow_confusion_matrix(cm, classes, title='', normalize=False, nm_cmap='vir
            # ... and label them with the respective list entries
            xticklabels=classes, yticklabels=classes,
            title=title,
-           ylabel='True label',
-           xlabel='Predicted label')
+           ylabel='COBAS Category',
+           xlabel='Predicted Category')
     ax.set_xlim(x_lim)
     ax.set_ylim(y_lim)
 
@@ -144,20 +146,21 @@ def imshow_confusion_matrix(cm, classes, title='', normalize=False, nm_cmap='vir
     return ax
 
 
-def print_agreement(base, coh_k, fl_k):
+def print_agreement(base, coh_k, fl_k, kripp_a):
     """ Print the agreement values"""
     prec = 8
 
     print("Agreement Statistics")
-    print(f"    Baseline        = {base:.{prec}f}")
-    print(f"    Cohen's kappa   = {coh_k:.{prec}f}")
-    print(f"    Fleiss' kappa   = {fl_k:.{prec}f}")
+    print(f"    Baseline            = {base:.{prec}f}")
+    print(f"    Cohen's kappa       = {coh_k:.{prec}f}")
+    print(f"    Fleiss' kappa       = {fl_k:.{prec}f}")
+    print(f"    Krippendorff alpha  = {kripp_a:.{prec}f}")
 
 
 if __name__ == '__main__':
     # Load data
     with open(PATH_DATA_PROCESSED + nm_data_file_modeling + '.pdat', 'rb') as mfile:
-        X, y_true = pickle.load(mfile)
+        X_true, y_true = pickle.load(mfile)
 
     y_pred = []
     y_pred_cat = []
@@ -169,12 +172,18 @@ if __name__ == '__main__':
         y_pred_cat.append(np.zeros_like(y_pred_i, dtype='int32'))
 
     # Categorize the values (true and pred)
+    X_true_cat = np.zeros_like(y_true, dtype='int32')
     y_true_cat = np.zeros_like(y_true, dtype='int32')
     for i_cat, key_cat in enumerate(CATEGORIES):
         bnd = CATEGORIES[key_cat]
+
+        ind_true = np.where(np.logical_and(X_true >= bnd[0],
+                                           X_true < bnd[1]))
+        X_true_cat[ind_true] = i_cat
         ind_true = np.where(np.logical_and(y_true >= bnd[0],
                                            y_true < bnd[1]))
         y_true_cat[ind_true] = i_cat
+
         for j, nm_pred in enumerate(NM_PREDICTORS):
             ind_pred = np.where(np.logical_and(y_pred[j] >= bnd[0],
                                                y_pred[j] < bnd[1]))
@@ -188,22 +197,39 @@ if __name__ == '__main__':
         title = nm_pred.split('.')[0]
 
         print_confusion_matrix(cm, title=title)
-        plot_confusion_matrix(y_true_cat, y_pred_cat_i,
-                              title=title,
-                              classes=classes)
+        # plot_confusion_matrix(y_true_cat, y_pred_cat_i,
+        #                       title=title,
+        #                       classes=classes)
+        ax = imshow_confusion_matrix(cm, classes, title=title)
+        set_specs(ax, fig_size=(4, 3))
 
         # Compute and plot cohen's kappa score
         # The baseline probability is the "agreement by chance" (see p_e in the
         # Wikipedia article https://en.wikipedia.org/wiki/Cohen%27s_kappa)
         n = np.sum(np.sum(cm))
         p_e = sum(np.sum(cm, axis=0) * np.sum(cm, axis=1) / (n**2))
-        ratings = np.array([y_true_cat, y_pred_cat_i]).transpose()
-        coh_k = cohen_kappa(ratings, categories=categories)
-        fl_k = fleiss_kappa(ratings, categories=categories)
-        print_agreement(p_e, coh_k, fl_k)
+        ratings = np.array([y_true_cat, y_pred_cat_i])
+        ratings_t = ratings.transpose()
+        coh_k = cohen_kappa(ratings_t, categories=categories)
+        fl_k = fleiss_kappa(ratings_t, categories=categories)
+        kripp = krippendorff.alpha(ratings)
+        print_agreement(p_e, coh_k, fl_k, kripp)
 
+    # Plot 1-to-1 prediction
+    cm = confusion_matrix(y_true_cat, X_true_cat)
+    title = 'ABL Categories'
+
+    print_confusion_matrix(cm, title=title)
+    ax = imshow_confusion_matrix(cm, classes, title=title)
+    set_specs(ax, fig_size=(4, 3))
+
+    n = np.sum(np.sum(cm))
+    p_e = sum(np.sum(cm, axis=0) * np.sum(cm, axis=1) / (n ** 2))
+    ratings = np.array([y_true_cat, X_true_cat])
+    ratings_t = ratings.transpose()
+    coh = cohen_kappa(ratings_t, categories=categories)
+    fl = fleiss_kappa(ratings_t, categories=categories)
+    kripp = krippendorff.alpha(ratings)
+    print_agreement(p_e, coh, fl, kripp)
 
     plt.show()
-
-
-

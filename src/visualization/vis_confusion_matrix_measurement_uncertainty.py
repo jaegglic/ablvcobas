@@ -14,15 +14,16 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix
 
 # Local imports
-from src._paths import PATH_DATA_RAW
+from src._paths import PATH_DATA_RAW, PATH_FIG
 from src.visualization.trial_uncertainty_prop import gfr
 from src.visualization.vis_confusion_matrix_kitney import CATEGORIES, \
-    print_confusion_matrix, plot_confusion_matrix
+    print_confusion_matrix, imshow_confusion_matrix
+from src.visualization.plot_specs import set_specs
 
 # Constants
 TRANSF_CONSTANT = 0.011312217
 # VC_SCR = 0.0118    # From Alex's analysis (day-to-day level=92)
-VC_SCR = 0.014   # From the specification of the cobas test (at the end of Alex's file)
+VC_SCR = 0.011   # From the specification of the cobas test (at the end of Alex's file)
 SEED = 1525
 np.random.seed(SEED)
 
@@ -32,10 +33,12 @@ nm_data_file_raw = 'GFR_ABL_v_Cobas_1903_1906.xlsx'
 df = pd.read_excel(PATH_DATA_RAW + nm_data_file_raw)
 
 if __name__ == '__main__':
-    age_set  = df['Alter']
-    sex_set  = df['Sex']
-    crea_set = df['Creatinin Cobas (Analyse 53)']
-    gfr_true = df['Num. eGFR nach CKD-EPI\n(Analyse 64)']
+    age_set  = np.asarray(df['Alter'])
+    ind_mature = age_set >= 18
+    age_set = age_set[ind_mature]
+    sex_set  = np.asarray(df['Sex'])[ind_mature]
+    crea_set = np.asarray(df['Creatinin Cobas (Analyse 53)'])[ind_mature]
+    gfr_true = np.asarray(df['Num. eGFR nach CKD-EPI\n(Analyse 64)'])[ind_mature]
     # gfr_true = []
 
     gfr_test = []
@@ -67,7 +70,9 @@ if __name__ == '__main__':
     print(np.sum(np.array(cm), axis=0) / 780)
 
     classes = np.array(list(CATEGORIES.keys()), dtype='<U10')
-    plot_confusion_matrix(gfr_true_cat, gfr_test_cat, classes=classes)
-
+    ax = imshow_confusion_matrix(cm, classes)
+    set_specs(ax, fig_size=(4, 3))
+    fignm = PATH_FIG + 'ConfMat_PerturbedCobas.svg'
+    plt.savefig(fignm, format='svg')
     plt.show()
 

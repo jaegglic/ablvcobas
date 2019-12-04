@@ -62,7 +62,6 @@ def set_specs(
         cbar = im[-1].colorbar
         cbar.ax.tick_params(labelsize=specs['fontsize_ticks'])
 
-
     if fig_size is not None:
         ax.figure.set_size_inches(*fig_size)
 
